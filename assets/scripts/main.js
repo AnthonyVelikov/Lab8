@@ -65,6 +65,39 @@ function initializeServiceWorker() {
  * @returns {Array<Object>} An array of recipes found in localStorage
  */
 async function getRecipes() {
+     const stored = localStorage.getItem('recipes');
+     if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (_) {
+      // corrupted JSON? clear it out
+      localStorage.removeItem('recipes');
+    }
+  }
+ const recipes = [];
+    for (const url of RECIPE_URLS) {
+    try {
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} fetching ${url}`);
+      }
+     
+      const data = await response.json();
+     
+      recipes.push(data);
+    } catch (err) {
+      
+      console.error('Error fetching recipe:', url, err);
+      
+      throw err;
+    }
+  }
+
+  // A9. All fetched → cache & return
+  saveRecipesToStorage(recipes);
+  return recipes;
+    
   // EXPOSE - START (All expose numbers start with A)
   // A1. TODO - Check local storage to see if there are any recipes.
   //            If there are recipes, return them.
